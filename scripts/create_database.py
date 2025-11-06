@@ -1,8 +1,8 @@
 from datetime import datetime
 
 from geoalchemy2 import Geometry
-from loguru import logger
-from sqlalchemy import Insert, String, create_engine, text
+from shapely import Point
+from sqlalchemy import ForeignKey, String, create_engine, text
 from sqlalchemy.orm import (DeclarativeBase, Mapped, mapped_column,
                             relationship, sessionmaker)
 
@@ -14,20 +14,24 @@ class Base(DeclarativeBase):
 class Ship(Base):
     __tablename__ = "ships"
 
-    ship_id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
+    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
     mmsi: Mapped[str] = mapped_column(String(20), unique=True)
+
+    positions: Mapped[list["Position"]] = relationship(back_populates="ship")
 
 
 class Position(Base):
     __tablename__ = "positions"
     position_id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
 
-    ship_id: Mapped["Ship"] = relationship(back_populates="positions")
-    timestamp: Mapped[datetime]
     position: Mapped[Geometry] = mapped_column(
         Geometry(geometry_type="POINT", srid=4326)
     )
+    ship_id = mapped_column(ForeignKey("ships.id"))
+    timestamp: Mapped[datetime]
     nav_status: Mapped[str]
+
+    ship: Mapped[Ship] = relationship(back_populates="positions")
 
 
 class ClearAIS_DB:
