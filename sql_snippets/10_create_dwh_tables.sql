@@ -1,5 +1,7 @@
 CREATE schema IF NOT EXISTS dwh;
 
+CREATE extension IF NOT EXISTS postgis;
+
 DROP TABLE IF EXISTS dwh.ships CASCADE;
 
 CREATE TABLE dwh.ships (
