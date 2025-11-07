@@ -1,16 +1,36 @@
-insert into dwh.ships (mmsi) select mmsi from (
-  select t1.mmsi, ships.id from (select distinct mmsi from stg.csv_data) as t1
-  left join dwh.ships
-  on t1.mmsi = ships.mmsi
-where ships.id is null
-);
+INSERT INTO
+    dwh.ships (mmsi)
+SELECT
+    mmsi
+FROM
+    (
+        SELECT
+            t1.mmsi,
+            ships.id
+        FROM
+            (
+                SELECT
+                    DISTINCT mmsi
+                FROM
+                    stg.csv_data
+            ) AS t1
+            LEFT JOIN dwh.ships ON t1.mmsi = ships.mmsi
+        WHERE
+            ships.id IS NULL
+    );
 
-insert into dwh.positions (gps_position, ship_id, gps_timestamp, nav_status) select * from (
-	select ST_Point(t1.longitude, t1.latitude, 4326) as gps_position
-	, ships.id as ship_id
-	, t1.gps_timestamp
-	, t1.nav_status
-	from stg.csv_data as t1
-	left join dwh.ships as ships
-	on t1.mmsi = ships.mmsi
-)
+INSERT INTO
+    dwh.positions (gps_position, ship_id, gps_timestamp, nav_status)
+SELECT
+    *
+FROM
+    (
+        SELECT
+            ST_Point(t1.longitude, t1.latitude, 4326) AS gps_position,
+            ships.id AS ship_id,
+            t1.gps_timestamp,
+            t1.nav_status
+        FROM
+            stg.csv_data AS t1
+            LEFT JOIN dwh.ships AS ships ON t1.mmsi = ships.mmsi
+    )

@@ -1,21 +1,22 @@
-create schema if not exists dwh;
+CREATE schema IF NOT EXISTS dwh;
 
-drop table if exists dwh.ships cascade;
+DROP TABLE IF EXISTS dwh.ships CASCADE;
 
 CREATE TABLE dwh.ships (
-        id SERIAL NOT NULL,
-        mmsi VARCHAR(20) NOT NULL,
-        PRIMARY KEY (id),
-        UNIQUE (mmsi)
+    id SERIAL NOT NULL,
+    mmsi VARCHAR(20) NOT NULL,
+    PRIMARY KEY (id),
+    UNIQUE (mmsi)
 );
 
-drop table if exists dwh.positions cascade;
+DROP TABLE IF EXISTS dwh.positions CASCADE;
+
 CREATE TABLE dwh.positions (
-        position_id SERIAL NOT NULL,
-        gps_position geometry(POINT,4326) NOT NULL,
-        ship_id INTEGER,
-        gps_timestamp TIMESTAMP WITHOUT TIME ZONE NOT NULL,
-        nav_status VARCHAR NOT NULL,
-        PRIMARY KEY (position_id),
-        FOREIGN KEY(ship_id) REFERENCES ships (id)
+    position_id SERIAL NOT NULL,
+    gps_position geometry(POINT, 4326) NOT NULL,
+    ship_id INTEGER,
+    gps_timestamp TIMESTAMP WITHOUT TIME ZONE NOT NULL,
+    nav_status VARCHAR NOT NULL,
+    PRIMARY KEY (position_id),
+    FOREIGN KEY(ship_id) REFERENCES dwh.ships (id)
 );
