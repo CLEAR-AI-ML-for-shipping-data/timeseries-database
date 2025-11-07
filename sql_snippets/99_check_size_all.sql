@@ -1,4 +1,4 @@
-\ pset numericlocale
+\pset numericlocale
 CREATE temp TABLE tmp_dwh_layers AS
 SELECT
     layer
