@@ -11,6 +11,15 @@ CREATE TABLE dwh.ships (
     UNIQUE (mmsi)
 );
 
+DROP TABLE IF EXISTS dwh.nav_statuses CASCADE;
+
+CREATE TABLE dwh.nav_statuses (
+    id serial NOT NULL,
+    nav_status varchar NOT NULL,
+    PRIMARY KEY(id),
+    UNIQUE (nav_status)
+);
+
 DROP TABLE IF EXISTS dwh.positions CASCADE;
 
 CREATE TABLE dwh.positions (
@@ -18,7 +27,8 @@ CREATE TABLE dwh.positions (
     gps_position geometry(POINT, 4326) NOT NULL,
     ship_id INTEGER,
     gps_timestamp TIMESTAMP WITHOUT TIME ZONE NOT NULL,
-    nav_status VARCHAR NOT NULL,
+    nav_status_id integer,
     PRIMARY KEY (position_id),
-    FOREIGN KEY(ship_id) REFERENCES dwh.ships (id)
+    FOREIGN KEY(ship_id) REFERENCES dwh.ships (id),
+    FOREIGN KEY(nav_status_id) REFERENCES dwh.nav_statuses (id)
 );

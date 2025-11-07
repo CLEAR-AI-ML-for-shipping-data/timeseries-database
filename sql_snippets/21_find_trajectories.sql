@@ -19,7 +19,8 @@ CREATE temp TABLE tmp_deltas AS (
                 AND current ROW
         ) AS nav_status_prev
     FROM
-        dwh.positions
+        dwh.positions as pos 
+    left join dwh.nav_statuses as nav on pos.nav_status_id = nav.id
 );
 
 -- Determine engine transitions and timegaps
