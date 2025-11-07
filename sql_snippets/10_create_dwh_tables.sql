@@ -28,6 +28,9 @@ CREATE TABLE dwh.positions (
     ship_id INTEGER,
     gps_timestamp TIMESTAMP WITHOUT TIME ZONE NOT NULL,
     nav_status_id integer,
+    speed_over_ground float,
+    heading float,
+    course_over_ground float,
     PRIMARY KEY (position_id),
     FOREIGN KEY(ship_id) REFERENCES dwh.ships (id),
     FOREIGN KEY(nav_status_id) REFERENCES dwh.nav_statuses (id)

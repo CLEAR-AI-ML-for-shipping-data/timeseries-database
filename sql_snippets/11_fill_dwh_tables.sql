@@ -46,6 +46,9 @@ INSERT INTO
         ship_id,
         gps_timestamp,
         nav_status_id,
+        speed_over_ground,
+        heading,
+        course_over_ground
     )
 SELECT
     *
@@ -56,6 +59,9 @@ FROM
             ships.id AS ship_id,
             t1.gps_timestamp,
             nav.id AS nav_status_id,
+            t1.speed_over_ground,
+            t1.heading,
+            t1.course_over_ground
         FROM
             stg.csv_data AS t1
             LEFT JOIN dwh.ships AS ships ON t1.mmsi = ships.mmsi

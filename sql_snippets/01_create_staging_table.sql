@@ -9,6 +9,9 @@ CREATE TABLE IF NOT EXISTS stg.csv_data (
     latitude float,
     longitude float,
     nav_status character varying COLLATE pg_catalog."default" NOT NULL,
+    speed_over_ground float,
+    heading float,
+    course_over_ground float,
     CONSTRAINT csv_data_pkey PRIMARY KEY (position_id)
 ) TABLESPACE pg_default;
 
