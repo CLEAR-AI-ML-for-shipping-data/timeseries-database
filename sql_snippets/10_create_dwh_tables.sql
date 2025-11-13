@@ -1,6 +1,7 @@
 CREATE schema IF NOT EXISTS dwh;
 
 CREATE extension IF NOT EXISTS postgis;
+CREATE extension if not exists timescaledb;
 
 DROP TABLE IF EXISTS dwh.ships CASCADE;
 
