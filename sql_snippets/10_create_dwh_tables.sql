@@ -27,12 +27,15 @@ CREATE TABLE dwh.positions (
     position_id SERIAL NOT NULL,
     gps_position geometry(POINT, 4326) NOT NULL,
     ship_id INTEGER,
-    gps_timestamp TIMESTAMP WITHOUT TIME ZONE NOT NULL,
+    -- gps_timestamp TIMESTAMP WITHOUT TIME ZONE NOT NULL,
+    gps_timestamp TIMESTAMPTZ,
     nav_status_id integer,
     speed_over_ground float,
     heading float,
     course_over_ground float,
-    PRIMARY KEY (position_id),
+    -- PRIMARY KEY (position_id),
     FOREIGN KEY(ship_id) REFERENCES dwh.ships (id),
     FOREIGN KEY(nav_status_id) REFERENCES dwh.nav_statuses (id)
 );
+
+SELECT create_hypertable('dwh.positions', 'gps_timestamp', 'ship_id', 50);
