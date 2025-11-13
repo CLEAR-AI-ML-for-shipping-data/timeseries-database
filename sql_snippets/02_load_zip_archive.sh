@@ -32,5 +32,5 @@ for ((i = 0; i < ${#CSVFILES[@]}; i++)); do
   FILENUMBER=$((i + 1))
   echo "Copying file ${FILENAME} (${FILENUMBER}/${TOTAL_FILES})..."
   # We ignore errors, because sometimes there is a comma in the callsign, which messes up the column reading order
-  psql -e ${DB_CONN} -c "\copy stg.csv_data (gps_timestamp, course_over_ground, heading, latitude, longitude, mmsi, nav_status, speed_over_ground) FROM program 'tail -n+2 ""${FILENAME}"" | cut -d \, -f 1,4,14,16,17,18,20,28' WITH (ON_ERROR ignore, DELIMITER ',')"
+  psql -e ${DB_CONN} -c "\copy stg.csv_data (gps_timestamp, course_over_ground, heading, latitude, longitude, mmsi, nav_status, speed_over_ground) FROM program 'csvcut -c \"Base station time stamp\",\"Course over ground\",Heading,Latitude,Longitude,MMSI,\"Navigational status (text)\",\"Speed over ground\"  ""${FILENAME}""' WITH (ON_ERROR ignore, DELIMITER ',')"
 done
