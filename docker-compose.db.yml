@@ -1,0 +1,44 @@
+services:
+  postgis:
+    platform: linux/amd64
+    image: timescale/timescaledb-ha:pg17.6-ts2.23.0-all-oss
+    container_name: postgis_prod
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+      DB_ANON_ROLE: ${DB_ANON_ROLE}
+      DB_SCHEMA: ${DB_SCHEMA}
+    ports:
+      - 0.0.0.0:${POSTGRES_PORT}:5432
+    volumes:
+      - ${POSTGRES_DATA_DIR:-./postgres-data}:/var/lib/postgresql/data
+      - ./scripts/initdb-postgis.sh:/docker-entrypoint-initdb.d/initdb-postgis.sh
+    networks:
+      - gis-net
+    restart: unless-stopped
+
+  pgadmin:
+    platform: linux/amd64
+    container_name: pgadmin4_container
+    image: dpage/pgadmin4:latest
+    environment:
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_DEFAULT_EMAIL}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_DEFAULT_PASSWORD}
+      PGADMIN_LISTEN_PORT: 80
+    ports:
+      - 0.0.0.0:${PGADMIN_PORT}:80
+    volumes:
+      - pgadmin-data:/var/lib/pgadmin
+    restart: unless-stopped
+    networks:
+      - gis-net
+    depends_on:
+      - postgis
+
+volumes:
+  pgadmin-data:
+
+networks:
+  gis-net:
+    driver: bridge
