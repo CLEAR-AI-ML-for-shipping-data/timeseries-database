@@ -11,7 +11,7 @@ Available options:
      -s      The staging table to which the data will be copied. The default is "stg.csv_data"
 EOF
 }
-
+# Parse input arguments
 STAGETABLE="stg.csv_data"
 BATCH_SIZE=1000000
 DB_CONN=""
@@ -37,11 +37,13 @@ while getopts "b:d:hs:" opt; do
   esac
 done
 
+# Check that a database connection was passed
 if [[ "${DB_CONN}" == "" ]]; then
   echo "Empty database string"
   usage >&2
 fi
 
+# Calculate the number of rows and batches
 echo "Counting rows of $STAGETABLE, this might take a while..."
 ROWCOUNT=$(
   psql --dbname"${DB_CONN}" -c "SELECT COUNT(*) FROM ${STAGETABLE}" --csv -t
@@ -54,6 +56,7 @@ COUNTER=0
 
 echo "Inserting $TOTAL_BATCHES batches of $BATCH_SIZE rows..."
 
+# Execute batch insertion into dwh
 for ((BATCH = 0; $BATCH < $TOTAL_BATCHES; BATCH++)); do
   ((COUNTER = BATCH + 1))
   ((STARTROW = BATCH * BATCH_SIZE + 1))

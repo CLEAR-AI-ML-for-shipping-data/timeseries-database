@@ -10,6 +10,7 @@ Available options:
 EOF
 }
 
+# Parse the input arguments
 DB_CONN=""
 
 while getopts "d:h" OPT; do
@@ -27,11 +28,13 @@ while getopts "d:h" OPT; do
   esac
 done
 
+# Check that a database connection string was passed
 if [[ "${DB_CONN}" == "" ]]; then
   echo "Empty database string"
   usage >&2
 fi
 
+# Find all the ship IDs
 SHIPIDS=()
 while read -r SHIPID; do
   SHIPIDS+=("$SHIPID")
@@ -41,6 +44,7 @@ N_SHIPS=${#SHIPIDS[@]}
 echo "Found $N_SHIPS different ship_ids"
 COUNTER=0
 
+# Execute the procecure for finding voyages for each individual ship
 for SHIP_ID in "${SHIPIDS[@]}"; do
   ((COUNTER += 1))
   echo "Processing ship_id $SHIP_ID ($COUNTER / $N_SHIPS)..."
