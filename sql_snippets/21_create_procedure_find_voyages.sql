@@ -113,7 +113,6 @@ ALTER TABLE
 
 -- We do not deal with voyages that have no final stop condition
 -- We just set the stop datetime to 9999-12-31 00:00:00
--- select * from tmp_numbered_transitions
 CREATE TEMP TABLE tmp_trajectory_boundaries AS (
     SELECT
         t1.ship_id,
@@ -151,7 +150,6 @@ CREATE TEMP TABLE tmp_trajectory_boundaries AS (
         t1.gps_timestamp
 );
 
--- select * from tmp_trajectory_boundaries
 INSERT INTO
     dm.trajectory_limits (ship_id, datetime_start, datetime_stop)
 SELECT
