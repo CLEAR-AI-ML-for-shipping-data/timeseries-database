@@ -1,13 +1,13 @@
 DROP PROCEDURE IF EXISTS dm.find_voyages;
 
 CREATE
-OR REPLACE PROCEDURE dm.find_voyages(proc_ship_id integer) language plpgsql AS
+OR REPLACE PROCEDURE dm.find_voyages(proc_ship_id integer) LANGUAGE plpgsql AS
 $$
 DECLARE
 BEGIN
 -- DROP TABLE IF EXISTS tmp_ship_positions;
 
-CREATE temp TABLE tmp_ship_positions AS (
+CREATE TEMP TABLE tmp_ship_positions AS (
     SELECT
         *
     FROM
@@ -18,7 +18,7 @@ CREATE temp TABLE tmp_ship_positions AS (
 
 -- DROP TABLE IF EXISTS tmp_deltas;
 
-CREATE temp TABLE tmp_deltas AS (
+CREATE TEMP TABLE tmp_deltas AS (
     SELECT
         ship_id,
         gps_position,
@@ -42,7 +42,7 @@ CREATE temp TABLE tmp_deltas AS (
 -- Determine engine transitions and timegaps
 -- DROP TABLE IF EXISTS tmp_transitions;
 
-CREATE temp TABLE tmp_transitions AS (
+CREATE TEMP TABLE tmp_transitions AS (
     SELECT
         d.*,
         CASE
@@ -68,7 +68,7 @@ CREATE temp TABLE tmp_transitions AS (
 -- Combine the starts and stops
 -- DROP TABLE IF EXISTS tmp_trajectory_transitions;
 
-CREATE temp TABLE tmp_trajectory_transitions AS (
+CREATE TEMP TABLE tmp_trajectory_transitions AS (
     SELECT
         m.*
     FROM
@@ -100,7 +100,7 @@ CREATE temp TABLE tmp_trajectory_transitions AS (
 -- Remove the first datapoint of a ship if it is a stop point
 -- DROP TABLE IF EXISTS tmp_numbered_transitions;
 
-CREATE temp TABLE tmp_numbered_transitions AS (
+CREATE TEMP TABLE tmp_numbered_transitions AS (
     SELECT
         tt.*,
         row_number() over(
@@ -126,7 +126,7 @@ ALTER TABLE
 -- select * from tmp_numbered_transitions
 -- DROP TABLE IF EXISTS tmp_trajectory_boundaries;
 
-CREATE temp TABLE tmp_trajectory_boundaries AS (
+CREATE TEMP TABLE tmp_trajectory_boundaries AS (
     SELECT
         t1.ship_id,
         t1.gps_timestamp AS timestamp_start
