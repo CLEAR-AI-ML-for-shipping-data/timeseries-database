@@ -24,7 +24,6 @@ CREATE temp TABLE tmp_deltas AS (
 );
 
 -- Determine engine transitions and timegaps
-DROP TABLE IF EXISTS tmp_transitions;
 
 CREATE temp TABLE tmp_transitions AS (
     SELECT
@@ -50,7 +49,6 @@ CREATE temp TABLE tmp_transitions AS (
 );
 
 -- Combine the starts and stops
-DROP TABLE IF EXISTS tmp_trajectory_transitions;
 
 CREATE TABLE tmp_trajectory_transitions AS (
     SELECT
@@ -82,7 +80,6 @@ CREATE TABLE tmp_trajectory_transitions AS (
 );
 
 -- Remove the first datapoint of a ship if it is a stop point
-DROP TABLE IF EXISTS tmp_numbered_transitions;
 
 CREATE temp TABLE tmp_numbered_transitions AS (
     SELECT
@@ -108,7 +105,6 @@ ALTER TABLE
 -- We do not deal with voyages that have no final stop condition
 -- We just set the stop datetime to 9999-12-31 00:00:00
 -- select * from tmp_numbered_transitions
-DROP TABLE IF EXISTS tmp_trajectory_boundaries;
 
 CREATE temp TABLE tmp_trajectory_boundaries AS (
     SELECT
