@@ -5,8 +5,6 @@ OR REPLACE PROCEDURE dm.find_voyages(proc_ship_id integer) LANGUAGE plpgsql AS
 $$
 DECLARE
 BEGIN
--- DROP TABLE IF EXISTS tmp_ship_positions;
-
 CREATE TEMP TABLE tmp_ship_positions AS (
     SELECT
         *
@@ -15,8 +13,6 @@ CREATE TEMP TABLE tmp_ship_positions AS (
     WHERE
         pos.ship_id = proc_ship_id
 );
-
--- DROP TABLE IF EXISTS tmp_deltas;
 
 CREATE TEMP TABLE tmp_deltas AS (
     SELECT
@@ -40,8 +36,6 @@ CREATE TEMP TABLE tmp_deltas AS (
 );
 
 -- Determine engine transitions and timegaps
--- DROP TABLE IF EXISTS tmp_transitions;
-
 CREATE TEMP TABLE tmp_transitions AS (
     SELECT
         d.*,
@@ -66,8 +60,6 @@ CREATE TEMP TABLE tmp_transitions AS (
 );
 
 -- Combine the starts and stops
--- DROP TABLE IF EXISTS tmp_trajectory_transitions;
-
 CREATE TEMP TABLE tmp_trajectory_transitions AS (
     SELECT
         m.*
@@ -98,8 +90,6 @@ CREATE TEMP TABLE tmp_trajectory_transitions AS (
 );
 
 -- Remove the first datapoint of a ship if it is a stop point
--- DROP TABLE IF EXISTS tmp_numbered_transitions;
-
 CREATE TEMP TABLE tmp_numbered_transitions AS (
     SELECT
         tt.*,
@@ -124,8 +114,6 @@ ALTER TABLE
 -- We do not deal with voyages that have no final stop condition
 -- We just set the stop datetime to 9999-12-31 00:00:00
 -- select * from tmp_numbered_transitions
--- DROP TABLE IF EXISTS tmp_trajectory_boundaries;
-
 CREATE TEMP TABLE tmp_trajectory_boundaries AS (
     SELECT
         t1.ship_id,
