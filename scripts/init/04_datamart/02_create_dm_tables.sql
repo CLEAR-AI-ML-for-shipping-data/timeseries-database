@@ -1,8 +1,4 @@
-CREATE schema IF NOT EXISTS dm;
-
-DROP TABLE IF EXISTS dm.trajectory_limits;
-
-CREATE TABLE dm.trajectory_limits (
+CREATE TABLE IF NOT EXISTS dm.trajectory_limits (
     id SERIAL NOT NULL,
     ship_id BIGINT,
     datetime_start TIMESTAMP WITHOUT TIME ZONE NOT NULL,
