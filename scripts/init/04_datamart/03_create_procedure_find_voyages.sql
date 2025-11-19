@@ -1,5 +1,3 @@
-DROP PROCEDURE IF EXISTS dm.find_voyages;
-
 CREATE
 OR REPLACE PROCEDURE dm.find_voyages(proc_ship_id integer) LANGUAGE plpgsql AS
 $$
@@ -20,15 +18,15 @@ CREATE TEMP TABLE tmp_deltas AS (
         gps_position,
         gps_timestamp,
         nav_status,
-        gps_timestamp - lag(gps_timestamp) over(
-            PARTITION by ship_id
+        gps_timestamp - lag(gps_timestamp) OVER(
+            PARTITION BY ship_id
             ORDER BY
-                gps_timestamp ROWS BETWEEN 1 preceding AND current ROW
+                gps_timestamp ROWS BETWEEN 1 preceding AND CURRENT ROW
         ) AS delta_t,
-        lag(nav_status) over(
-            PARTITION by ship_id
+        lag(nav_status) OVER(
+            PARTITION BY ship_id
             ORDER BY
-                gps_timestamp ROWS BETWEEN 1 preceding AND current ROW
+                gps_timestamp ROWS BETWEEN 1 preceding AND CURRENT ROW
         ) AS nav_status_prev
     FROM
         tmp_ship_positions AS pos
@@ -74,10 +72,10 @@ CREATE TEMP TABLE tmp_trajectory_transitions AS (
                 greatest(
                     stop_engine -- The stop before a gap
 ,
-                    lead(start_after_gap) over (
-                        PARTITION by ship_id
+                    lead(start_after_gap) OVER (
+                        PARTITION BY ship_id
                         ORDER BY
-                            gps_timestamp ROWS BETWEEN current ROW
+                            gps_timestamp ROWS BETWEEN CURRENT ROW
                             AND 1 following
                     )
                 ) AS stop_trajectory
@@ -93,8 +91,8 @@ CREATE TEMP TABLE tmp_trajectory_transitions AS (
 CREATE TEMP TABLE tmp_numbered_transitions AS (
     SELECT
         tt.*,
-        row_number() over(
-            PARTITION by ship_id
+        row_number() OVER(
+            PARTITION BY ship_id
             ORDER BY
                 gps_timestamp
         ) AS regular_rank

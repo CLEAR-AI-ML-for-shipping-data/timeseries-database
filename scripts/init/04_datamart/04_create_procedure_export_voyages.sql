@@ -1,5 +1,3 @@
-DROP PROCEDURE IF EXISTS dm.export_trajectories;
-
 CREATE
 OR REPLACE PROCEDURE dm.export_trajectories(proc_ship_id integer) LANGUAGE plpgsql AS
 $$
