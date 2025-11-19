@@ -1,7 +1,3 @@
-CREATE SCHEMA IF NOT EXISTS stg AUTHORIZATION clear;
-
-DROP TABLE IF EXISTS stg.csv_data;
-
 CREATE TABLE IF NOT EXISTS stg.csv_data (
     position_id SERIAL NOT NULL,
     gps_timestamp timestamp without time zone NOT NULL,
