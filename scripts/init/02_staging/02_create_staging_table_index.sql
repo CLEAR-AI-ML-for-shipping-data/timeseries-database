@@ -11,7 +11,7 @@ CREATE TABLE IF NOT EXISTS stg.csv_data (
     CONSTRAINT csv_data_pkey PRIMARY KEY (position_id)
 ) TABLESPACE pg_default;
 
-CREATE INDEX ON stg.csv_data (position_id);
+CREATE INDEX IF NOT EXISTS ON stg.csv_data (position_id);
 
 ALTER TABLE
     IF EXISTS stg.csv_data OWNER TO clear;

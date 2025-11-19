@@ -12,7 +12,7 @@ CREATE TABLE IF NOT EXISTS dwh.nav_statuses (
     UNIQUE (nav_status)
 );
 
-CREATE TABLE dwh.positions (
+CREATE TABLE IF NOT EXISTS dwh.positions (
     position_id SERIAL NOT NULL,
     gps_position geometry(POINT, 4326) NOT NULL,
     ship_id INTEGER,
