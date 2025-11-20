@@ -85,6 +85,7 @@ if __name__ == "__main__":
                     p.imap(star_find_voyages, input_args),
                     total=len(input_args),
                     unit="ship",
+                    dynamic_ncols=True,
                 )
             )
     if export is True:
@@ -95,5 +96,6 @@ if __name__ == "__main__":
                     p.imap(star_export_voyages, input_args),
                     total=len(input_args),
                     unit="ship",
+                    dynamic_ncols=True,
                 )
             )
