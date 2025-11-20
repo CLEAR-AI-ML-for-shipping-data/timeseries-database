@@ -1,7 +1,10 @@
 from argparse import ArgumentParser
 
 import psycopg
+from loguru import logger
 from tqdm import trange
+
+INDEX_NAME = "positions_gps_timestamp_ship_id_idx"
 
 
 def get_number_of_rows_for_update(dbname: str):
@@ -15,11 +18,28 @@ def get_number_of_rows_for_update(dbname: str):
 def call_procedure(index_min: int, index_max: int, dbname: str):
     sql_stmt = f"CALL dwh.insert_into_dwh( {index_min}, {index_max} );"
     with psycopg.connect(dbname) as conn:
-        _ = conn.execute(sql_stmt)
+        # _ = conn.execute(sql_stmt)
+        conn.execute(sql_stmt)
 
 
 def star_call_procedure(args):
     call_procedure(*args)
+
+
+def create_index(dbname: str):
+    sql_stmt = (
+        f"CREATE INDEX {INDEX_NAME} ON dwh.positions (gps_timestamp ASC, ship_id);"
+    )
+    with psycopg.connect(dbname) as conn:
+        logger.info(f"Building index {INDEX_NAME}, this might take a while...")
+        conn.execute(sql_stmt)
+
+
+def drop_index(dbname: str):
+    sql_stmt = f"DROP INDEX IF EXISTS dwh.{INDEX_NAME};"
+    with psycopg.connect(dbname) as conn:
+        logger.info(f"Dropping index {INDEX_NAME}")
+        conn.execute(sql_stmt)
 
 
 if __name__ == "__main__":
@@ -35,9 +55,14 @@ if __name__ == "__main__":
     nworkers = args.nworkers
 
     nrows = get_number_of_rows_for_update(dbname)
+    logger.info(f"Found {nrows} rows to be inserted")
+    drop_index(dbname=dbname)
 
-    for i in trange(1, nrows + 1, batchsize):
+    logger.info(f"Starting batch insertion, with batch size {batchsize}")
+    for i in trange(1, nrows + 1, batchsize, dynamic_ncols=True):
         call_procedure(i, i + batchsize - 1, dbname)
+
+    create_index(dbname=dbname)
 
     # # Maybe this parallel process can be used if we redesign the update procedure
     # input_args = []

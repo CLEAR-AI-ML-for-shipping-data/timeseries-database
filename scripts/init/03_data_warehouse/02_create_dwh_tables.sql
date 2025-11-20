@@ -23,7 +23,7 @@ CREATE TABLE IF NOT EXISTS dwh.positions (
     course_over_ground float,
     FOREIGN KEY(ship_id) REFERENCES dwh.ships (id),
     FOREIGN KEY(nav_status_id) REFERENCES dwh.nav_statuses (id)
+) WITH (
+    tsdb.hypertable,
+    tsdb.create_default_indexes = FALSE
 );
-
-SELECT
-    create_hypertable('dwh.positions', 'gps_timestamp', 'ship_id', 50);
