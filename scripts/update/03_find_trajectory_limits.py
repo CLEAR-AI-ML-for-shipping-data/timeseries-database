@@ -45,17 +45,31 @@ def star_find_voyages(input_args):
     return find_voyages_per_ship(*input_args)
 
 
+def export_voyages_per_ship(dbname: str, ship_id: int):
+    sql_stmt = f"CALL dm.export_trajectories( {ship_id} );"
+    with psycopg.connect(dbname) as conn:
+        conn.execute(sql_stmt)
+
+
+def star_export_voyages(input_args):
+    return export_voyages_per_ship(*input_args)
+
+
 if __name__ == "__main__":
     parser = ArgumentParser(prog="Add CSV data")
 
     parser.add_argument("-d", "--dbname", type=str, required=True)
     parser.add_argument("-b", "--batchsize", type=int, default=1_000_000)
     parser.add_argument("-n", "--nworkers", type=int, default=4)
+    parser.add_argument("-s", "--skip_finding", action='store_true')
+    parser.add_argument("-x", "--export", action='store_true')
 
     args = parser.parse_args()
     dbname = args.dbname
     batchsize = args.batchsize
     nworkers = args.nworkers
+    skip_finding = args.skip_finding
+    export = args.export
 
     ship_ids: List[int] = get_ships_for_update(dbname)
     logger.info(f"Found {len(ship_ids)} ships to find trajectories for")
@@ -63,11 +77,23 @@ if __name__ == "__main__":
 
     input_args = list(zip(repeat(dbname), ship_ids))
 
-    with Pool(nworkers) as p:
-        result = list(
-            tqdm(
-                p.imap(star_find_voyages, input_args),
-                total=len(input_args),
-                unit="ship",
+    if skip_finding is False:
+        logger.info(f"Finding new voyages for {len(ship_ids)} ships")
+        with Pool(nworkers) as p:
+            result = list(
+                tqdm(
+                    p.imap(star_find_voyages, input_args),
+                    total=len(input_args),
+                    unit="ship",
+                )
             )
-        )
+    if export is True:
+        logger.info(f"Exporting voyages for {len(ship_ids)} ships")
+        with Pool(nworkers) as p:
+            result = list(
+                tqdm(
+                    p.imap(star_export_voyages, input_args),
+                    total=len(input_args),
+                    unit="ship",
+                )
+            )
