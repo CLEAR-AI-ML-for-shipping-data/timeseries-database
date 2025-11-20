@@ -5,6 +5,8 @@ description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
+    "loguru>=0.7.3",
     "pandas>=2.3.3",
     "psycopg[binary]>=3.2.12",
+    "tqdm>=4.67.1",
 ]
