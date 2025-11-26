@@ -2,7 +2,7 @@ import inspect
 import os
 from argparse import ArgumentParser
 from pathlib import Path
-from typing import Optional
+from typing import Optional, Union
 
 import psycopg
 from loguru import logger
@@ -24,7 +24,7 @@ def apply_source_file(dbname: str, sourcefile: Path):
         conn.execute(sql_stmt)
 
 
-def main(dbname: str, source: Optional[str] = None):
+def main(dbname: str, source: Optional[Union[str, Path]] = None):
     if source is None:
         source = os.path.dirname(
             os.path.abspath(inspect.getfile(inspect.currentframe()))
