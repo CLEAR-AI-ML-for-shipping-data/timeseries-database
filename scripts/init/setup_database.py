@@ -14,17 +14,33 @@ SKIP_FILE = "01_create_database.sql"
 
 
 def apply_source_file(dbname: str, sourcefile: Path):
+    """Apply a SQL script to the database.
+
+    Args:
+        dbname: database connection string
+        sourcefile: filename of the SQL script
+    """
     with open(sourcefile) as file:
         lines = file.readlines()
 
     sql_stmt = " ".join(lines)
+
+    # Only display the last 3 layers of the path to prevent clutter
     last_3_layers = "/".join(sourcefile.parts[-3:])
     logger.info(f"Executing {last_3_layers}")
+
     with psycopg.connect(dbname) as conn:
         conn.execute(sql_stmt)
 
 
 def main(dbname: str, source: Optional[Union[str, Path]] = None):
+    """Run one or more SQL scripts on a database.
+
+    Args:
+        dbname: database connection string
+        source: folder with SQL scripts, or single scipt apply_source_file
+    """
+    # If no source is provided, use the current directory
     if source is None:
         source = os.path.dirname(
             os.path.abspath(inspect.getfile(inspect.currentframe()))
@@ -52,8 +68,15 @@ def main(dbname: str, source: Optional[Union[str, Path]] = None):
 if __name__ == "__main__":
     parser = ArgumentParser(prog="setup_database")
 
-    parser.add_argument("-d", "--dbname", type=str, required=True)
-    parser.add_argument("-s", "--source", type=str)
+    parser.add_argument(
+        "-d", "--dbname", type=str, required=True, help="database connection string"
+    )
+    parser.add_argument(
+        "-s",
+        "--source",
+        type=str,
+        help="source file or folder, defaults to current folder",
+    )
 
     args = parser.parse_args()
     dbname = args.dbname
