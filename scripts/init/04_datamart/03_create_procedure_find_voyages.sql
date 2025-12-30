@@ -3,6 +3,13 @@ OR REPLACE PROCEDURE dm.find_voyages(proc_ship_id integer) LANGUAGE plpgsql AS
 $$
 DECLARE
 BEGIN
+-- Remove an open-ended voyage
+DELETE FROM
+    dm.trajectory_limits
+WHERE
+    ship_id = proc_ship_id
+    AND datetime_stop = TIMESTAMP 'infinity';
+
 CREATE TEMP TABLE tmp_ship_positions AS (
     SELECT
         *
@@ -10,6 +17,12 @@ CREATE TEMP TABLE tmp_ship_positions AS (
         dwh.positions AS pos
     WHERE
         pos.ship_id = proc_ship_id
+        AND pos.gps_timestamp > (
+            SELECT
+                coalesce(max(datetime_stop), TIMESTAMP '-infinity')
+            FROM
+                dm.trajectory_limits
+        )
 );
 
 CREATE TEMP TABLE tmp_deltas AS (
