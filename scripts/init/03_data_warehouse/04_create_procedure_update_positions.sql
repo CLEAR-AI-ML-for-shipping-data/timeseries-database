@@ -5,64 +5,17 @@ DECLARE
 BEGIN
 /* This process consists of several steps
  1) select a chunk from the staging table
- 2) Update the ships table with ships not yet in that table
- 3) Update the nav_status table with statuses not yet in the table
- 4) Insert the normalized rows into the positions table
+ 2) fetch the correct ship_id and nav_status_id
+ 3) Insert the normalized rows into the positions table
  */
--- 1) Select a chunk from the staging table
-CREATE TEMP TABLE tmp_stg_csv_data AS
-SELECT
-    *
-FROM
-    stg.csv_data
-WHERE
-    position_id BETWEEN min_id AND max_id;
-
--- Update the ships table
-INSERT INTO
-    dwh.ships (mmsi)
-SELECT
-    mmsi
-FROM
-    (
-        SELECT
-            t1.mmsi,
-            ships.id
-        FROM
-            (
-                SELECT
-                    DISTINCT mmsi
-                FROM
-                    tmp_stg_csv_data
-            ) AS t1
-            LEFT JOIN dwh.ships ON t1.mmsi = ships.mmsi
-        WHERE
-            ships.id IS NULL
-    );
-
--- Update the nav_status table
-INSERT INTO
-    dwh.nav_statuses(nav_status)
-SELECT
-    nav_status
-FROM
-    (
-        SELECT
-            t1.nav_status,
-            nav.id
-        FROM
-            (
-                SELECT
-                    DISTINCT nav_status
-                FROM
-                    tmp_stg_csv_data
-            ) AS t1
-            LEFT JOIN dwh.nav_statuses AS nav ON t1.nav_status = nav.nav_status
-        WHERE
-            nav.id IS NULL
-    );
-
--- Update positions table
+WITH tmp_stg_csv_data AS (
+    SELECT
+        *
+    FROM
+        stg.csv_data
+    WHERE
+        position_id BETWEEN min_id AND max_id
+)
 INSERT INTO
     dwh.positions (
         gps_position,
