@@ -1,7 +1,6 @@
 -- Split the trajectories into two tables
 -- 1) with just the beginning and end of the trajectory
 -- 2) a full linestring, so that we can add a geo-index
-
 CREATE TABLE IF NOT EXISTS dm.trajectory_limits (
     id SERIAL NOT NULL,
     ship_id BIGINT,
@@ -10,7 +9,6 @@ CREATE TABLE IF NOT EXISTS dm.trajectory_limits (
     PRIMARY KEY (id),
     FOREIGN KEY (ship_id) REFERENCES dwh.ships
 );
-
 
 CREATE TABLE IF NOT EXISTS dm.exported_trajectories (
     trajectory_id integer,
@@ -22,5 +20,5 @@ CREATE TABLE IF NOT EXISTS dm.exported_trajectories (
     speed_over_ground float [],
     course_over_ground float [],
     heading float [],
-    FOREIGN KEY(trajectory_id) REFERENCES dm.trajectory_limits (id)
+    FOREIGN KEY(trajectory_id) REFERENCES dm.trajectory_limits (id) ON DELETE CASCADE
 );
