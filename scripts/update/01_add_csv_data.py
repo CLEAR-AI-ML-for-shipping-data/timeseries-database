@@ -36,6 +36,12 @@ COPY_STATEMENT = f"COPY stg.csv_data ( {','.join(TABLECOLS)} ) FROM STDIN CSV"
 
 
 def upload_csv_to_db(dbname: str, csv_file: Union[str, Path]):
+    """Upload a CSV file to a database.
+
+    Args:
+        dbname: database connection string
+        csv_file: CSV file location
+    """
     conn = psycopg.connect(dbname)
     df = pd.read_csv(csv_file, usecols=CSVCOLS)
 
@@ -46,13 +52,30 @@ def upload_csv_to_db(dbname: str, csv_file: Union[str, Path]):
 
 
 def star_upload_csv_to_db(arg: Tuple):
+    """Upload a CSV file to a database.
+
+    This function only exists to be used by a parallel processing pool.
+
+    Args:
+        dbname: database connection string
+        csv_file: CSV file location
+    """
     return upload_csv_to_db(*arg)
 
 
 def get_csv_paths(folder: str):
+    """Find all CSV files within in folder, recursively.
+
+    Args:
+        folder: folder containing CSV files
+
+    Returns:
+        a list of CSV file locations
+    """
     datafolder = Path(folder)
     csv_files = []
     for item in datafolder.walk():
+        # item is a tuple of (dirpath, dirnames, filenames)
         csv_files += [
             item[0] / datafile
             for datafile in item[2]
@@ -64,13 +87,25 @@ def get_csv_paths(folder: str):
 if __name__ == "__main__":
     parser = ArgumentParser(prog="Add CSV data")
 
-    parser.add_argument("-d", "--dbname", type=str, required=True)
+    parser.add_argument(
+        "-d", "--dbname", type=str, required=True, help="database connection string"
+    )
 
     source_group = parser.add_mutually_exclusive_group(required=True)
-    source_group.add_argument("-c", "--csv_file", type=str)
-    source_group.add_argument("-f", "--folder", type=str)
+    source_group.add_argument(
+        "-c", "--csv_file", type=str, help="CSV file to be uploaded"
+    )
+    source_group.add_argument(
+        "-f", "--folder", type=str, help="folder with CSV files to be uploaded"
+    )
 
-    parser.add_argument("-n", "--nworkers", type=int, default=4)
+    parser.add_argument(
+        "-n",
+        "--nworkers",
+        type=int,
+        default=4,
+        help="number of parallel upload workers (default: %(default)s)",
+    )
 
     args = parser.parse_args()
     dbname = args.dbname

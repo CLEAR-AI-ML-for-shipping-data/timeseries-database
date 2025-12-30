@@ -1,7 +1,7 @@
 from argparse import ArgumentParser
 from itertools import repeat
 from multiprocessing import Pool
-from typing import List
+from typing import List, Tuple
 
 import psycopg
 from loguru import logger
@@ -11,6 +11,14 @@ INDEX_NAME = "trajectory_limits_datetime_start_ship_id_idx"
 
 
 def get_ships_for_update(dbname: str):
+    """Retrieve all the ship ids.
+
+    Args:
+        dbname: database connection string
+
+    Returns:
+        a list of ship IDs
+    """
     conn = psycopg.connect(dbname)
     with conn:
         res = conn.execute("SELECT id FROM dwh.ships ")
@@ -19,6 +27,11 @@ def get_ships_for_update(dbname: str):
 
 
 def create_index(dbname: str):
+    """Create index for trajectory limits table, based on ship id and start time.
+
+    Args:
+        dbname: database connection string
+    """
     sql_stmt = (
         f"CREATE INDEX IF NOT EXISTS {INDEX_NAME} ON dm.trajectory_limits "
         "(datetime_start ASC, ship_id);"
@@ -29,6 +42,11 @@ def create_index(dbname: str):
 
 
 def drop_index(dbname: str):
+    """Drop index for trajectory limits table.
+
+    Args:
+        dbname: database connection string
+    """
     sql_stmt = f"DROP INDEX IF EXISTS dm.{INDEX_NAME};"
     with psycopg.connect(dbname) as conn:
         logger.info(f"Dropping index {INDEX_NAME}")
@@ -36,22 +54,48 @@ def drop_index(dbname: str):
 
 
 def find_voyages_per_ship(dbname: str, ship_id: int):
+    """Call the find_voyages stored procedure for a ship.
+
+    Args:
+        dbname: database connection string
+        ship_id: id of the ship
+    """
     sql_stmt = f"CALL dm.find_voyages( {ship_id} );"
     with psycopg.connect(dbname) as conn:
         conn.execute(sql_stmt)
 
 
-def star_find_voyages(input_args):
+def star_find_voyages(input_args: Tuple):
+    """Wrapper around find_voyages_per_ship for parallel processing.
+
+    Args:
+        input_args: arguments to find_voyages_per_ship
+    """
     return find_voyages_per_ship(*input_args)
 
 
 def export_voyages_per_ship(dbname: str, ship_id: int):
+    """Call the procedure for exporting voyage trajectories.
+
+    This depends on the endpoints of the voyage having been previously found with
+    the find_voyages_per_ship function. The exporting voyages entails creating a
+    LineString geometry that is stored in a different table.
+
+    Args:
+        dbname: database connection string
+        ship_id: ID of the ship.
+    """
     sql_stmt = f"CALL dm.export_trajectories( {ship_id} );"
     with psycopg.connect(dbname) as conn:
         conn.execute(sql_stmt)
 
 
-def star_export_voyages(input_args):
+def star_export_voyages(input_args: Tuple):
+    """Wrapper around export_voyages_per_ship for parallel processing.
+
+    Args:
+        input_args: arguments to export_voyages_per_ship
+    """
     return export_voyages_per_ship(*input_args)
 
 
