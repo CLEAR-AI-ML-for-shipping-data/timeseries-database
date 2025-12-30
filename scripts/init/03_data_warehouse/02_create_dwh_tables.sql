@@ -21,6 +21,7 @@ CREATE TABLE IF NOT EXISTS dwh.positions (
     speed_over_ground float,
     heading float,
     course_over_ground float,
+    load_date TIMESTAMP WITHOUT TIME ZONE,
     FOREIGN KEY(ship_id) REFERENCES dwh.ships (id),
     FOREIGN KEY(nav_status_id) REFERENCES dwh.nav_statuses (id)
 ) WITH (

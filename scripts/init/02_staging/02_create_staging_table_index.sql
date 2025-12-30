@@ -8,6 +8,7 @@ CREATE TABLE IF NOT EXISTS stg.csv_data (
     speed_over_ground float,
     heading float,
     course_over_ground float,
+    load_date timestamp without time zone NOT NULL DEFAULT NOW(),
     CONSTRAINT csv_data_pkey PRIMARY KEY (position_id)
 ) TABLESPACE pg_default;
 

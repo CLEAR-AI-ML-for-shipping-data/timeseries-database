@@ -71,7 +71,8 @@ INSERT INTO
         nav_status_id,
         speed_over_ground,
         heading,
-        course_over_ground
+        course_over_ground,
+        load_date
     )
 SELECT
     ST_Point(t1.longitude, t1.latitude, 4326) AS gps_position,
@@ -80,7 +81,8 @@ SELECT
     nav.id AS nav_status_id,
     t1.speed_over_ground,
     t1.heading,
-    t1.course_over_ground
+    t1.course_over_ground,
+    t1.load_date
 FROM
     tmp_stg_csv_data AS t1
     LEFT JOIN dwh.ships AS ships ON t1.mmsi = ships.mmsi
