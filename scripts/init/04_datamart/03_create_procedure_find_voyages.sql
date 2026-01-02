@@ -1,5 +1,8 @@
 CREATE
-OR REPLACE PROCEDURE dm.find_voyages(proc_ship_id integer) LANGUAGE plpgsql AS
+OR REPLACE PROCEDURE dm.find_voyages(
+    proc_ship_id_min integer,
+    proc_ship_id_max integer
+) LANGUAGE plpgsql AS
 $$
 DECLARE
 BEGIN
@@ -7,22 +10,31 @@ BEGIN
 DELETE FROM
     dm.trajectory_limits
 WHERE
-    ship_id = proc_ship_id
-    AND datetime_stop = TIMESTAMP 'infinity';
-
+    ship_id BETWEEN proc_ship_id_min AND proc_ship_id_max
+    -- AND datetime_stop = TIMESTAMP 'infinity'
+;
 CREATE TEMP TABLE tmp_ship_positions AS (
     SELECT
-        *
+        pos.*
     FROM
         dwh.positions AS pos
-    WHERE
-        pos.ship_id = proc_ship_id
-        AND pos.gps_timestamp > (
-            SELECT
-                coalesce(max(datetime_stop), TIMESTAMP '-infinity')
-            FROM
-                dm.trajectory_limits
-        )
+        -- INNER JOIN
+        -- -- pos.ship_id BETWEEN proc_ship_id_min AND proc_ship_id_max
+        -- -- AND pos.gps_timestamp >
+        -- (
+        --     SELECT
+        --         ship_id,
+        --         coalesce(max(datetime_stop), TIMESTAMP '-infinity') AS max_datetime_stop
+        --     FROM
+        --         dm.trajectory_limits AS tl
+        --     WHERE
+        --         --tl.ship_id = proc_ship_id
+        --         ship_id BETWEEN proc_ship_id_min AND proc_ship_id_max
+        --     GROUP BY
+        --         ship_id
+        -- ) AS t2 ON pos.ship_id = t2.ship_id
+        -- AND pos.gps_timestamp > t2.max_datetime_stop
+  where pos.ship_id between proc_ship_id_min and proc_ship_id_max
 );
 
 CREATE TEMP TABLE tmp_deltas AS (
