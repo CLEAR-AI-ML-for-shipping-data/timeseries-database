@@ -116,12 +116,12 @@ if __name__ == "__main__":
     export = args.export
 
     ship_ids: List[int] = get_ships_for_update(dbname)
-    logger.info(f"Found {len(ship_ids)} ships to find trajectories for")
-    drop_index(dbname=dbname)
 
     input_args = list(zip(repeat(dbname), ship_ids))
 
     if skip_finding is False:
+        logger.info(f"Found {len(ship_ids)} ships to find trajectories for")
+        drop_index(dbname=dbname)
         logger.info(f"Finding new voyages for {len(ship_ids)} ships")
         with Pool(nworkers) as p:
             result = list(
@@ -132,6 +132,8 @@ if __name__ == "__main__":
                     dynamic_ncols=True,
                 )
             )
+        create_index(dbname=dbname)
+
     if export is True:
         logger.info(f"Exporting voyages for {len(ship_ids)} ships")
         with Pool(nworkers) as p:
