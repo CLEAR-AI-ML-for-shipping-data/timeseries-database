@@ -1,5 +1,4 @@
 from argparse import ArgumentParser
-from itertools import repeat
 from multiprocessing import Pool
 from typing import List, Tuple
 
@@ -53,14 +52,14 @@ def drop_index(dbname: str):
         conn.execute(sql_stmt)
 
 
-def find_voyages_per_ship(dbname: str, ship_id: int):
+def find_voyages_per_ship(dbname: str, ship_id_min: int, ship_id_max: int):
     """Call the find_voyages stored procedure for a ship.
 
     Args:
         dbname: database connection string
         ship_id: id of the ship
     """
-    sql_stmt = f"CALL dm.find_voyages( {ship_id} );"
+    sql_stmt = f"CALL dm.find_voyages( {ship_id_min}, {ship_id_max} );"
     with psycopg.connect(dbname) as conn:
         conn.execute(sql_stmt)
 
@@ -103,32 +102,42 @@ if __name__ == "__main__":
     parser = ArgumentParser(prog="Add CSV data")
 
     parser.add_argument("-d", "--dbname", type=str, required=True)
-    parser.add_argument("-b", "--batchsize", type=int, default=1_000_000)
-    parser.add_argument("-n", "--nworkers", type=int, default=4)
+    parser.add_argument("-b", "--batchsize", type=int, default=1_000)
+    # Disable the multiple workers option for now
+    # Parallel processing somehow leads to inconsistent results
+    # parser.add_argument("-n", "--nworkers", type=int, default=4)
     parser.add_argument("-s", "--skip_finding", action="store_true")
     parser.add_argument("-x", "--export", action="store_true")
 
     args = parser.parse_args()
     dbname = args.dbname
     batchsize = args.batchsize
-    nworkers = args.nworkers
+    # nworkers = args.nworkers
+    nworkers = 1
     skip_finding = args.skip_finding
     export = args.export
 
     ship_ids: List[int] = get_ships_for_update(dbname)
 
-    input_args = list(zip(repeat(dbname), ship_ids))
+    total_ships = len(ship_ids)
+    input_args = []
+
+    for i in range(0, total_ships + 1, batchsize):
+        input_args.append((dbname, i, i + batchsize - 1))
 
     if skip_finding is False:
         logger.info(f"Found {len(ship_ids)} ships to find trajectories for")
         drop_index(dbname=dbname)
-        logger.info(f"Finding new voyages for {len(ship_ids)} ships")
+        logger.info(
+            f"Finding new voyages for {len(ship_ids)} ships, in batches of {batchsize}"
+        )
         with Pool(nworkers) as p:
             result = list(
                 tqdm(
                     p.imap(star_find_voyages, input_args),
                     total=len(input_args),
-                    unit="ship",
+                    # unit="ship",
+                    unit="batch",
                     dynamic_ncols=True,
                 )
             )
