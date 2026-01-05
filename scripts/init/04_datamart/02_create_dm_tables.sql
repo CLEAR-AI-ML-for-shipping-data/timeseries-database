@@ -10,6 +10,8 @@ CREATE TABLE IF NOT EXISTS dm.trajectory_limits (
     FOREIGN KEY (ship_id) REFERENCES dwh.ships
 );
 
+CREATE INDEX IF NOT EXISTS dm_trajectory_limits_ship_id ON dm.trajectory_limits (ship_id);
+
 CREATE TABLE IF NOT EXISTS dm.exported_trajectories (
     trajectory_id integer,
     mmsi varchar(20),
