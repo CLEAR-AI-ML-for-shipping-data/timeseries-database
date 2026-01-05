@@ -11,30 +11,27 @@ DELETE FROM
     dm.trajectory_limits
 WHERE
     ship_id BETWEEN proc_ship_id_min AND proc_ship_id_max
-    -- AND datetime_stop = TIMESTAMP 'infinity'
-;
+    AND datetime_stop = TIMESTAMP 'infinity';
+
 CREATE TEMP TABLE tmp_ship_positions AS (
+    WITH ship_timelimits AS (
+        SELECT
+            ships.id AS ship_id,
+            coalesce(max(tl.datetime_stop), TIMESTAMP '-infinity') AS max_datetime_stop
+        FROM
+            dwh.ships AS ships
+            LEFT JOIN dm.trajectory_limits AS tl ON ships.id = tl.ship_id
+        WHERE
+            ships.id BETWEEN proc_ship_id_min AND proc_ship_id_max
+        GROUP BY
+            ships.id
+    )
     SELECT
         pos.*
     FROM
-        dwh.positions AS pos
-        -- INNER JOIN
-        -- -- pos.ship_id BETWEEN proc_ship_id_min AND proc_ship_id_max
-        -- -- AND pos.gps_timestamp >
-        -- (
-        --     SELECT
-        --         ship_id,
-        --         coalesce(max(datetime_stop), TIMESTAMP '-infinity') AS max_datetime_stop
-        --     FROM
-        --         dm.trajectory_limits AS tl
-        --     WHERE
-        --         --tl.ship_id = proc_ship_id
-        --         ship_id BETWEEN proc_ship_id_min AND proc_ship_id_max
-        --     GROUP BY
-        --         ship_id
-        -- ) AS t2 ON pos.ship_id = t2.ship_id
-        -- AND pos.gps_timestamp > t2.max_datetime_stop
-  where pos.ship_id between proc_ship_id_min and proc_ship_id_max
+        ship_timelimits AS stl
+        INNER JOIN dwh.positions AS pos ON stl.ship_id = pos.ship_id
+        AND stl.max_datetime_stop < pos.gps_timestamp
 );
 
 CREATE TEMP TABLE tmp_deltas AS (
