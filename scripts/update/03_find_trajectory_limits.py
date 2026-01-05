@@ -103,14 +103,17 @@ if __name__ == "__main__":
 
     parser.add_argument("-d", "--dbname", type=str, required=True)
     parser.add_argument("-b", "--batchsize", type=int, default=1_000)
-    parser.add_argument("-n", "--nworkers", type=int, default=4)
+    # Disable the multiple workers option for now
+    # Parallel processing somehow leads to inconsistent results
+    # parser.add_argument("-n", "--nworkers", type=int, default=4)
     parser.add_argument("-s", "--skip_finding", action="store_true")
     parser.add_argument("-x", "--export", action="store_true")
 
     args = parser.parse_args()
     dbname = args.dbname
     batchsize = args.batchsize
-    nworkers = args.nworkers
+    # nworkers = args.nworkers
+    nworkers = 1
     skip_finding = args.skip_finding
     export = args.export
 
