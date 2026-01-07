@@ -73,6 +73,27 @@ def star_find_voyages(input_args: Tuple):
     return find_voyages_per_ship(*input_args)
 
 
+def find_export_voyages_per_ship(dbname: str, ship_id_min: int, ship_id_max: int):
+    """Call the find_export_voyages stored procedure for a ship.
+
+    Args:
+        dbname: database connection string
+        ship_id: id of the ship
+    """
+    sql_stmt = f"CALL dm.find_export_voyages( {ship_id_min}, {ship_id_max} );"
+    with psycopg.connect(dbname) as conn:
+        conn.execute(sql_stmt)
+
+
+def star_find_export_voyages(input_args: Tuple):
+    """Wrapper around find_export_voyages_per_ship for parallel processing.
+
+    Args:
+        input_args: arguments to find_voyages_per_ship
+    """
+    return find_export_voyages_per_ship(*input_args)
+
+
 def export_voyages_per_ship(dbname: str, ship_id: int):
     """Call the procedure for exporting voyage trajectories.
 
