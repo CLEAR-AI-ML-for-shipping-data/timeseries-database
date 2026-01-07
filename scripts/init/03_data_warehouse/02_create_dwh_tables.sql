@@ -26,5 +26,6 @@ CREATE TABLE IF NOT EXISTS dwh.positions (
     FOREIGN KEY(nav_status_id) REFERENCES dwh.nav_statuses (id)
 ) WITH (
     tsdb.hypertable,
-    tsdb.create_default_indexes = FALSE
+    tsdb.create_default_indexes = FALSE,
+    tsdb.chunk_interval = '1 day'
 );
