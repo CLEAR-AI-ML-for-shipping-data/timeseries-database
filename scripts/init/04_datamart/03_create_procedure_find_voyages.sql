@@ -17,7 +17,7 @@ CREATE TEMP TABLE tmp_ship_positions AS (
     WITH ship_timelimits AS (
         SELECT
             ships.id AS ship_id,
-            coalesce(max(tl.datetime_stop), TIMESTAMP '-infinity') AS max_datetime_stop
+            max(tl.datetime_stop) AS max_datetime_stop
         FROM
             dwh.ships AS ships
             LEFT JOIN dm.trajectory_limits AS tl ON ships.id = tl.ship_id
@@ -31,7 +31,10 @@ CREATE TEMP TABLE tmp_ship_positions AS (
     FROM
         ship_timelimits AS stl
         INNER JOIN dwh.positions AS pos ON stl.ship_id = pos.ship_id
-        AND stl.max_datetime_stop < pos.gps_timestamp
+        AND (
+            stl.max_datetime_stop < pos.gps_timestamp
+            OR stl.max_datetime_stop IS NULL
+        )
 );
 
 CREATE TEMP TABLE tmp_deltas AS (
