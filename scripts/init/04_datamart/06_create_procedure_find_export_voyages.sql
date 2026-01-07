@@ -234,9 +234,7 @@ FROM
     LEFT JOIN dwh.ships AS ships ON tl.ship_id = ships.id
     LEFT JOIN dm.trajectory_limits AS tr ON tr.ship_id = tl.ship_id
     AND tr.datetime_start = tl.timestamp_start
-    AND tr.datetime_stop = tl.timestamp_stop
-    -- there is no need for a where condition on ship_id
-;
+    AND tr.datetime_stop = tl.timestamp_stop;
 
 END;
 
