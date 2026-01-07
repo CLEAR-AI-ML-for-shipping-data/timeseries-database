@@ -174,27 +174,36 @@ if __name__ == "__main__":
     if skip_finding is False:
         logger.info(f"Found {len(ship_ids)} ships to find trajectories for")
         drop_index(dbname=dbname)
-        logger.info(
-            f"Finding new voyages for {len(ship_ids)} ships, in batches of {batchsize}"
-        )
+        if export is False:
+            star_func = star_find_voyages
+            log_message = (
+                f"Finding new voyages for {len(ship_ids)} ships,"
+                f" in batches of {batchsize}"
+            )
+        else:
+            star_func = star_find_export_voyages
+            log_message = (
+                f"Finding and exporting new voyages for {len(ship_ids)} ships,"
+                " in batches of {batchsize}"
+            )
+        logger.info(log_message)
         with Pool(nworkers) as p:
             result = list(
                 tqdm(
-                    p.imap(star_find_voyages, input_args),
+                    p.imap(star_func, input_args),
                     total=len(input_args),
-                    # unit="ship",
                     unit="batch",
                     dynamic_ncols=True,
                 )
             )
         create_index(dbname=dbname)
 
-    if export is True:
+    elif export is True:
         logger.info(f"Exporting voyages for {len(ship_ids)} ships")
         with Pool(nworkers) as p:
             result = list(
                 tqdm(
-                    p.imap(star_export_voyages, input_args),
+                    p.imap(star_batch_export_voyages, input_args),
                     total=len(input_args),
                     unit="ship",
                     dynamic_ncols=True,
