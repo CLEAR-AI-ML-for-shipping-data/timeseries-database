@@ -1,5 +1,5 @@
 CREATE
-OR REPLACE PROCEDURE dm.find_voyages(
+OR REPLACE PROCEDURE dm.find_export_voyages(
     proc_ship_id_min integer,
     proc_ship_id_max integer
 ) LANGUAGE plpgsql AS
@@ -181,6 +181,60 @@ SELECT
     timestamp_stop
 FROM
     tmp_trajectory_boundaries;
+
+-- Export the actual trajectories to a different table
+INSERT INTO
+    dm.exported_trajectories (
+        trajectory_id,
+        mmsi,
+        datetime_start,
+        datetime_stop,
+        coordinates,
+        timestamps,
+        speed_over_ground,
+        course_over_ground,
+        heading
+    )
+SELECT
+    DISTINCT ON (tr.id) tr.id AS trajectory_id,
+    ships.mmsi,
+    tl.timestamp_start,
+    tl.timestamp_stop,
+    ST_MakeLine(
+        array_agg(gps_position) OVER (
+            PARTITION by tr.id
+            ORDER BY
+                gps_timestamp ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING
+        )
+    ) AS coordinates,
+    array_agg(gps_timestamp) OVER (
+        PARTITION by tr.id
+        ORDER BY
+            gps_timestamp ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING
+    ) AS timestamps,
+    array_agg(speed_over_ground) OVER (
+        PARTITION by tr.id
+        ORDER BY
+            gps_timestamp ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING
+    ) AS speed_over_ground,
+    array_agg(course_over_ground) OVER (
+        PARTITION by tr.id
+        ORDER BY
+            gps_timestamp ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING
+    ) AS course_over_ground,
+    array_agg(heading) OVER (
+        PARTITION by tr.id
+        ORDER BY
+            gps_timestamp ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING
+    ) AS heading
+FROM
+    tmp_trajectory_boundaries AS tl
+    LEFT JOIN tmp_ship_positions AS pos ON tl.ship_id = pos.ship_id
+    AND pos.gps_timestamp BETWEEN tl.timestamp_start AND tl.timestamp_stop
+    LEFT JOIN dwh.ships AS ships ON tl.ship_id = ships.id
+    LEFT JOIN dm.trajectory_limits AS tr ON tr.ship_id = tl.ship_id
+    AND tr.datetime_start = tl.timestamp_start
+    AND tr.datetime_stop = tl.timestamp_stop;
 
 END;
 

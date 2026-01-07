@@ -96,7 +96,9 @@ def create_index(dbname: str):
         dbname: database connection string
     """
     sql_stmt = (
-        f"CREATE INDEX {INDEX_NAME} ON dwh.positions (gps_timestamp ASC, ship_id);"
+        # First index is on equality (ship_id), second on range (datetime)
+        # This should improve performance
+        f"CREATE INDEX {INDEX_NAME} ON dwh.positions (ship_id, gps_timestamp ASC);"
     )
     with psycopg.connect(dbname) as conn:
         logger.info(f"Building index {INDEX_NAME}, this might take a while...")

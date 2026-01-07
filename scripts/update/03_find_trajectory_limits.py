@@ -73,6 +73,27 @@ def star_find_voyages(input_args: Tuple):
     return find_voyages_per_ship(*input_args)
 
 
+def find_export_voyages_per_ship(dbname: str, ship_id_min: int, ship_id_max: int):
+    """Call the find_export_voyages stored procedure for a ship.
+
+    Args:
+        dbname: database connection string
+        ship_id: id of the ship
+    """
+    sql_stmt = f"CALL dm.find_export_voyages( {ship_id_min}, {ship_id_max} );"
+    with psycopg.connect(dbname) as conn:
+        conn.execute(sql_stmt)
+
+
+def star_find_export_voyages(input_args: Tuple):
+    """Wrapper around find_export_voyages_per_ship for parallel processing.
+
+    Args:
+        input_args: arguments to find_voyages_per_ship
+    """
+    return find_export_voyages_per_ship(*input_args)
+
+
 def export_voyages_per_ship(dbname: str, ship_id: int):
     """Call the procedure for exporting voyage trajectories.
 
@@ -96,6 +117,31 @@ def star_export_voyages(input_args: Tuple):
         input_args: arguments to export_voyages_per_ship
     """
     return export_voyages_per_ship(*input_args)
+
+
+def batch_export_voyages(dbname: str, min_ship_id: int, max_ship_id: int):
+    """Call the procedure for exporting voyage trajectories.
+
+    This depends on the endpoints of the voyage having been previously found with
+    the find_voyages_per_ship function. The exporting voyages entails creating a
+    LineString geometry that is stored in a different table.
+
+    Args:
+        dbname: database connection string
+        ship_id: ID of the ship.
+    """
+    sql_stmt = f"CALL dm.batch_export_trajectories( {min_ship_id}, {max_ship_id} );"
+    with psycopg.connect(dbname) as conn:
+        conn.execute(sql_stmt)
+
+
+def star_batch_export_voyages(input_args: Tuple):
+    """Wrapper around batch_export_voyages for parallel processing.
+
+    Args:
+        input_args: arguments to batch_export_voyages
+    """
+    return batch_export_voyages(*input_args)
 
 
 if __name__ == "__main__":
@@ -128,27 +174,36 @@ if __name__ == "__main__":
     if skip_finding is False:
         logger.info(f"Found {len(ship_ids)} ships to find trajectories for")
         drop_index(dbname=dbname)
-        logger.info(
-            f"Finding new voyages for {len(ship_ids)} ships, in batches of {batchsize}"
-        )
+        if export is False:
+            star_func = star_find_voyages
+            log_message = (
+                f"Finding new voyages for {len(ship_ids)} ships,"
+                f" in batches of {batchsize}"
+            )
+        else:
+            star_func = star_find_export_voyages
+            log_message = (
+                f"Finding and exporting new voyages for {len(ship_ids)} ships,"
+                " in batches of {batchsize}"
+            )
+        logger.info(log_message)
         with Pool(nworkers) as p:
             result = list(
                 tqdm(
-                    p.imap(star_find_voyages, input_args),
+                    p.imap(star_func, input_args),
                     total=len(input_args),
-                    # unit="ship",
                     unit="batch",
                     dynamic_ncols=True,
                 )
             )
         create_index(dbname=dbname)
 
-    if export is True:
+    elif export is True:
         logger.info(f"Exporting voyages for {len(ship_ids)} ships")
         with Pool(nworkers) as p:
             result = list(
                 tqdm(
-                    p.imap(star_export_voyages, input_args),
+                    p.imap(star_batch_export_voyages, input_args),
                     total=len(input_args),
                     unit="ship",
                     dynamic_ncols=True,
