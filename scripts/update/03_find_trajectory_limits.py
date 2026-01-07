@@ -119,6 +119,31 @@ def star_export_voyages(input_args: Tuple):
     return export_voyages_per_ship(*input_args)
 
 
+def batch_export_voyages(dbname: str, min_ship_id: int, max_ship_id: int):
+    """Call the procedure for exporting voyage trajectories.
+
+    This depends on the endpoints of the voyage having been previously found with
+    the find_voyages_per_ship function. The exporting voyages entails creating a
+    LineString geometry that is stored in a different table.
+
+    Args:
+        dbname: database connection string
+        ship_id: ID of the ship.
+    """
+    sql_stmt = f"CALL dm.batch_export_trajectories( {min_ship_id}, {max_ship_id} );"
+    with psycopg.connect(dbname) as conn:
+        conn.execute(sql_stmt)
+
+
+def star_batch_export_voyages(input_args: Tuple):
+    """Wrapper around batch_export_voyages for parallel processing.
+
+    Args:
+        input_args: arguments to batch_export_voyages
+    """
+    return batch_export_voyages(*input_args)
+
+
 if __name__ == "__main__":
     parser = ArgumentParser(prog="Add CSV data")
 
