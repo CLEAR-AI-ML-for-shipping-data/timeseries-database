@@ -184,7 +184,7 @@ if __name__ == "__main__":
             star_func = star_find_export_voyages
             log_message = (
                 f"Finding and exporting new voyages for {len(ship_ids)} ships,"
-                " in batches of {batchsize}"
+                f" in batches of {batchsize}"
             )
         logger.info(log_message)
         with Pool(nworkers) as p:
