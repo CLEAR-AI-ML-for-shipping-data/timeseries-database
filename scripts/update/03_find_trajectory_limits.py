@@ -213,7 +213,7 @@ if __name__ == "__main__":
         trajectory_ids = get_trajectories_for_export(dbname=dbname)
         query_strings = []
         input_args = []
-        batch_size = 10
+        batchsize = 10
 
         for i in range(0, len(trajectory_ids) + 1, batchsize):
             trajs = ",".join(
