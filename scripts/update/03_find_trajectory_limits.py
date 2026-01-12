@@ -25,6 +25,19 @@ def get_ships_for_update(dbname: str):
         return [i[0] for i in rows]
 
 
+def get_trajectories_for_export(dbname: str):
+    query = (
+        "select id from dm.trajectory_limits as tl left join dm.exported_trajectories"
+        " as et on tl.id = et.trajectory_id where et.trajectory_id is null "
+        "and tl.datetime_stop - tl.datetime_start > interval '12 hours'"
+        "and tl.datetime_stop < timestamp 'infinity';"
+    )
+    with psycopg.connect(dbname) as conn:
+        res = conn.execute(query=query)
+        rows = res.fetchall()
+        return [row[0] for row in rows]
+
+
 def create_index(dbname: str):
     """Create index for trajectory limits table, based on ship id and start time.
 
@@ -144,6 +157,12 @@ def star_batch_export_voyages(input_args: Tuple):
     return batch_export_voyages(*input_args)
 
 
+def star_run_query(input_args: Tuple):
+    dbname, query = input_args
+    with psycopg.connect(dbname) as conn:
+        conn.execute(query)
+
+
 if __name__ == "__main__":
     parser = ArgumentParser(prog="Add CSV data")
 
@@ -174,18 +193,10 @@ if __name__ == "__main__":
     if skip_finding is False:
         logger.info(f"Found {len(ship_ids)} ships to find trajectories for")
         drop_index(dbname=dbname)
-        if export is False:
-            star_func = star_find_voyages
-            log_message = (
-                f"Finding new voyages for {len(ship_ids)} ships,"
-                f" in batches of {batchsize}"
-            )
-        else:
-            star_func = star_find_export_voyages
-            log_message = (
-                f"Finding and exporting new voyages for {len(ship_ids)} ships,"
-                f" in batches of {batchsize}"
-            )
+        star_func = star_find_voyages
+        log_message = (
+            f"Finding new voyages for {len(ship_ids)} ships, in batches of {batchsize}"
+        )
         logger.info(log_message)
         with Pool(nworkers) as p:
             result = list(
@@ -198,14 +209,32 @@ if __name__ == "__main__":
             )
         create_index(dbname=dbname)
 
-    elif export is True:
-        logger.info(f"Exporting voyages for {len(ship_ids)} ships")
+    if export is True:
+        trajectory_ids = get_trajectories_for_export(dbname=dbname)
+        query_strings = []
+        input_args = []
+        batch_size = 10
+
+        for i in range(0, len(trajectory_ids) + 1, batchsize):
+            trajs = ",".join(
+                [
+                    str(i)
+                    for i in trajectory_ids[i : min(i + batchsize, len(trajectory_ids))]
+                ]
+            )
+            input_args.append(
+                (dbname, f"call dm.export_multiple_trajectory_by_id( ARRAY[{trajs}] );")
+            )
+
+        logger.info(
+            f"Exporting {len(trajectory_ids)} voyages in batches of {batchsize}..."
+        )
         with Pool(nworkers) as p:
             result = list(
                 tqdm(
-                    p.imap(star_batch_export_voyages, input_args),
+                    p.imap(star_run_query, input_args),
                     total=len(input_args),
-                    unit="ship",
+                    unit="batch",
                     dynamic_ncols=True,
                 )
             )
