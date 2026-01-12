@@ -10,6 +10,10 @@ The database consists of multiple layers:
 2. data warehouse layer (`dwh`), where we denormalize the data to NF3
 3. datamart layer (`dm`), which contains tables with useful information for analysis or other use
 
+An overview of this schematic is shown in the image below.
+
+![An overview of the database schemas](database_design.drawio.svg)
+
 ## Scripts
 
 All scripts necessary to run the processes associated with this database are
@@ -64,6 +68,12 @@ The finding of trajectories happens in two stages.
 First we establish the start and end points of what we consider trajectories by calling the `dm.find_voyages` procedure.
 The ship_id and both timestamps are then stored in the table `dm.trajectory_limits`.
 After that, we create an export table, which contains the entire trajectory as a linestring, as well as vectors of the different scalar values during this voyage.
+
+Both of these stages can be done with the script `scripts/update/03_find_trajectory_limits.py`.
+By default, this script will only find new trajectory limits.
+If you want to export the voyages as well, use the `--export` flag.
+If you want to skip the finding procedure, and only want to export already found trajectories, use the `--skip_finding` flag as well.
+Currently, the exporter only exports voyages longer than 12 hours.
 
 ## Suggestions for improvement
 
