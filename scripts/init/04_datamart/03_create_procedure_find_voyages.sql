@@ -95,8 +95,13 @@ CREATE TEMP TABLE tmp_trajectory_transitions AS (
                 tt.nav_status,
                 greatest(start_engine, start_after_gap) AS start_trajectory,
                 greatest(
-                    stop_engine -- The stop before a gap
-,
+                    -- stop_engine -- The stop before a gap
+                    lead(stop_engine) OVER (
+                        PARTITION BY ship_id
+                        ORDER BY
+                            gps_timestamp ROWS BETWEEN CURRENT ROW
+                            AND 1 following
+                    ),
                     lead(start_after_gap) OVER (
                         PARTITION BY ship_id
                         ORDER BY
